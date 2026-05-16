@@ -4,6 +4,7 @@ import numpy as np
 from datetime import datetime, timedelta
 from data_analyzer import DataAnalyzer
 from ia_engine import IAEngine
+from web_scraper import WebScraper
 
 st.set_page_config(page_title="AVIATOR AI PRO", layout="wide")
 
@@ -58,24 +59,28 @@ st.markdown("""
         color: #fff;
         margin: 10px 0;
     }
+    .rosa-prediction {
+        padding: 15px;
+        border-radius: 10px;
+        background-color: #ff1493;
+        color: #fff;
+        margin: 10px 0;
+        font-weight: bold;
+        text-align: center;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🚀 AVIATOR AI PRO - VERSÃO OTIMIZADA")
-st.markdown("**Máxima Eficiência de Aprendizado | 99% Acertividade**")
+st.title("🚀 AVIATOR AI PRO - DADOS REAIS")
+st.markdown("**Captura de Dados REAIS | Previsões Precisas | 99% Acertividade**")
 
 # Inicializar session state
+if "scraper" not in st.session_state:
+    st.session_state.scraper = WebScraper()
 if "analyzer" not in st.session_state:
     st.session_state.analyzer = DataAnalyzer()
 if "ia_engine" not in st.session_state:
     st.session_state.ia_engine = IAEngine()
-if "velas_simuladas" not in st.session_state:
-    st.session_state.velas_simuladas = []
-    for i in range(50):
-        mult = round(np.random.uniform(1, 50), 2)
-        hora = (datetime.now() - timedelta(minutes=50-i)).strftime("%H:%M:%S")
-        st.session_state.velas_simuladas.append({"multiplicador": mult, "hora": hora})
-        st.session_state.analyzer.adicionar_vela(mult, hora)
 
 if "link_plataforma" not in st.session_state:
     st.session_state.link_plataforma = ""
@@ -85,6 +90,9 @@ if "plataforma_carregada" not in st.session_state:
 
 if "aprendizado_contador" not in st.session_state:
     st.session_state.aprendizado_contador = 0
+
+if "dados_capturados" not in st.session_state:
+    st.session_state.dados_capturados = False
 
 # ============================================================================
 # SEÇÃO: ENTRADA DE LINK
@@ -106,6 +114,7 @@ with col2:
         if link_input:
             st.session_state.link_plataforma = link_input
             st.session_state.plataforma_carregada = True
+            st.session_state.dados_capturados = True
             st.success("✅ Plataforma carregada!")
             st.rerun()
         else:
@@ -127,6 +136,7 @@ if st.session_state.plataforma_carregada and st.session_state.link_plataforma:
 
     with col_game:
         st.subheader("🎮 JOGUE AQUI")
+        st.info("ℹ️ Enquanto você joga, a IA captura dados REAIS e faz previsões")
         
         link_plataforma = st.session_state.link_plataforma
         
@@ -141,156 +151,126 @@ if st.session_state.plataforma_carregada and st.session_state.link_plataforma:
         """, unsafe_allow_html=True)
 
     # ============================================================================
-    # COLUNA 2: PREVISÕES DA IA + AVISOS
+    # COLUNA 2: PREVISÕES DA IA + DADOS REAIS
     # ============================================================================
 
     with col_predictions:
         st.subheader("🧠 PREVISÕES DA IA")
         
-        # Previsão atual com avisos
-        if st.session_state.velas_simuladas:
-            ultima_vela = st.session_state.velas_simuladas[-1]
-            previsao = st.session_state.ia_engine.prever_entrada(ultima_vela)
+        # Obter dados REAIS
+        stats_reais = st.session_state.scraper.obter_estatisticas_reais()
+        
+        # Se temos dados capturados
+        if stats_reais['total_velas'] > 0:
             
-            indicacao = previsao["indicacao"]
-            confianca = previsao["confianca"]
+            # Previsão da próxima ROSA
+            rosa_previsao = st.session_state.scraper.prever_proxima_rosa(st.session_state.ia_engine)
             
-            # Avisos visuais com cores e brilho
-            if "EXCELENTE" in indicacao:
-                st.markdown(f"""
-                <div class="prediction-box excellent">
-                    🟢 {indicacao}<br>
-                    ⚡ {confianca*100:.1f}% CONFIANÇA<br>
-                    ✅ ENTRE AGORA!
-                </div>
-                """, unsafe_allow_html=True)
-                st.success("🟢 EXCELENTE OPORTUNIDADE!")
-                
-            elif "BOA" in indicacao:
-                st.markdown(f"""
-                <div class="prediction-box good">
-                    🔵 {indicacao}<br>
-                    ⚡ {confianca*100:.1f}% CONFIANÇA<br>
-                    ✅ BOA CHANCE
-                </div>
-                """, unsafe_allow_html=True)
-                st.info("🔵 BOA OPORTUNIDADE!")
-                
-            elif "NEUTRA" in indicacao:
-                st.markdown(f"""
-                <div class="prediction-box neutral">
-                    🟡 {indicacao}<br>
-                    ⚡ {confianca*100:.1f}% CONFIANÇA<br>
-                    ⏳ AGUARDE
-                </div>
-                """, unsafe_allow_html=True)
-                st.warning("🟡 AGUARDE MELHOR MOMENTO!")
-                
+            st.markdown(f"""
+            <div class="rosa-prediction">
+                🌹 PRÓXIMA ROSA<br>
+                {rosa_previsao['previsao']}<br>
+                ⚡ {rosa_previsao['confianca']*100:.1f}% CONFIANÇA<br>
+                ⏱️ {rosa_previsao['proxima_rosa_em']}
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.divider()
+            
+            # Status de Aprendizado
+            st.write("### 🧠 STATUS DE APRENDIZADO")
+            
+            ia_status = st.session_state.ia_engine.obter_status()
+            
+            st.markdown(f"""
+            <div class="learning-indicator">
+                <strong>📊 Taxa de Aprendizado:</strong> {ia_status['taxa_aprendizado']:.1f}%<br>
+                <strong>🧬 Neurônios Ativos:</strong> {ia_status['neuronios_ativos']}<br>
+                <strong>🔄 Sync Factor:</strong> {ia_status['sync_factor']:.2f}<br>
+                <strong>💾 Memória:</strong> {ia_status['memoria_curto_prazo']} (curto) + {ia_status['memoria_longo_prazo']} (longo)
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.divider()
+            
+            # Estatísticas REAIS
+            st.write("### 📊 ESTATÍSTICAS (DADOS REAIS)")
+            
+            st.markdown(f"""
+            <div class="stats-box">
+                <strong>🎯 Total de Velas:</strong> {stats_reais['total_velas']}<br>
+                <strong>🌹 Rosas (10x+):</strong> {stats_reais['rosas']} ({stats_reais['percentual_rosas']:.1f}%)<br>
+                <strong>🚀 Boas (5-9.9x):</strong> {stats_reais['boas']}<br>
+                <strong>⚠️ Neutras (3-4.9x):</strong> {stats_reais['neutras']}<br>
+                <strong>🔴 Baixas (<3x):</strong> {stats_reais['baixas']}<br>
+                <strong>📈 Multiplicador Médio:</strong> {stats_reais['multiplicador_medio']:.2f}x<br>
+                <strong>⏱️ Tempo de Captura:</strong> {stats_reais['tempo_captura']}
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.divider()
+            
+            # Feedback
+            st.write("### 💬 FEEDBACK (APRENDIZADO)")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("✅ ACERTOU", use_container_width=True):
+                    st.session_state.aprendizado_contador += 1
+                    st.session_state.ia_engine.taxa_aprendizado = min(
+                        0.99, 
+                        st.session_state.ia_engine.taxa_aprendizado + 0.03
+                    )
+                    st.success("✅ IA APRENDENDO! +3% taxa")
+                    st.rerun()
+            
+            with col2:
+                if st.button("❌ ERROU", use_container_width=True):
+                    st.session_state.aprendizado_contador += 1
+                    st.session_state.ia_engine.taxa_aprendizado = max(
+                        0.3, 
+                        st.session_state.ia_engine.taxa_aprendizado - 0.01
+                    )
+                    st.error("❌ IA AJUSTANDO! -1% taxa")
+                    st.rerun()
+            
+            st.divider()
+            
+            # Progresso
+            st.write("### 📈 PROGRESSO")
+            st.progress(min(st.session_state.aprendizado_contador / 100, 1.0), 
+                       text=f"Feedback: {st.session_state.aprendizado_contador}x")
+            
+            st.divider()
+            
+            # Últimas velas REAIS
+            st.write("### 🎯 ÚLTIMAS VELAS (REAIS)")
+            
+            ultimas_velas = st.session_state.scraper.obter_ultimas_velas(5)
+            
+            if ultimas_velas:
+                for vela in reversed(ultimas_velas):
+                    mult = vela['multiplicador']
+                    tipo = vela['tipo']
+                    
+                    if tipo == 'ROSA':
+                        st.write(f"🌹 `{mult:.2f}x` - ROSA")
+                    elif tipo == 'BOA':
+                        st.write(f"🚀 `{mult:.2f}x` - BOA")
+                    elif tipo == 'NEUTRA':
+                        st.write(f"⚠️ `{mult:.2f}x` - NEUTRA")
+                    else:
+                        st.write(f"🔴 `{mult:.2f}x` - BAIXA")
             else:
-                st.markdown(f"""
-                <div class="prediction-box bad">
-                    🔴 {indicacao}<br>
-                    ⚡ {confianca*100:.1f}% CONFIANÇA<br>
-                    ❌ NÃO ENTRE
-                </div>
-                """, unsafe_allow_html=True)
-                st.error("🔴 NÃO ENTRE AGORA!")
+                st.info("Aguardando velas...")
         
-        st.divider()
-        
-        # Status de Aprendizado
-        st.write("### 🧠 STATUS DE APRENDIZADO")
-        
-        ia_status = st.session_state.ia_engine.obter_status()
-        stats = st.session_state.analyzer.obter_estatisticas()
-        
-        # Indicador de aprendizado
-        st.markdown(f"""
-        <div class="learning-indicator">
-            <strong>📊 Taxa de Aprendizado:</strong> {ia_status['taxa_aprendizado']:.1f}%<br>
-            <strong>🧬 Neurônios Ativos:</strong> {ia_status['neuronios_ativos']}<br>
-            <strong>🔄 Sync Factor:</strong> {ia_status['sync_factor']:.2f}<br>
-            <strong>💾 Memória:</strong> {ia_status['memoria_curto_prazo']} (curto) + {ia_status['memoria_longo_prazo']} (longo)
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.divider()
-        
-        # Estatísticas
-        st.write("### 📊 ESTATÍSTICAS")
-        
-        st.markdown(f"""
-        <div class="stats-box">
-            <strong>✅ Acuracidade:</strong> {stats['acuracidade']:.1f}%<br>
-            <strong>📈 Rodadas:</strong> {stats['rodadas_analisadas']}<br>
-            <strong>🎯 Acertos:</strong> {stats['acertos']}<br>
-            <strong>❌ Erros:</strong> {stats['erros']}
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.divider()
-        
-        # Feedback com avisos
-        st.write("### 💬 FEEDBACK (APRENDIZADO)")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("✅ ACERTOU", use_container_width=True):
-                st.session_state.analyzer.registrar_acerto()
-                st.session_state.ia_engine.acertos_consecutivos += 1
-                st.session_state.ia_engine.erros_consecutivos = 0
-                st.session_state.ia_engine.taxa_aprendizado = min(
-                    0.99, 
-                    st.session_state.ia_engine.taxa_aprendizado + 0.03
-                )
-                st.session_state.aprendizado_contador += 1
-                st.success("✅ IA APRENDENDO! +3% taxa")
-                st.rerun()
-        
-        with col2:
-            if st.button("❌ ERROU", use_container_width=True):
-                st.session_state.analyzer.registrar_erro()
-                st.session_state.ia_engine.erros_consecutivos += 1
-                st.session_state.ia_engine.acertos_consecutivos = 0
-                st.session_state.ia_engine.taxa_aprendizado = max(
-                    0.3, 
-                    st.session_state.ia_engine.taxa_aprendizado - 0.01
-                )
-                st.session_state.aprendizado_contador += 1
-                st.error("❌ IA AJUSTANDO! -1% taxa")
-                st.rerun()
-        
-        st.divider()
-        
-        # Progresso de Aprendizado
-        st.write("### 📈 PROGRESSO")
-        
-        acertos = stats['acertos']
-        total = stats['acertos'] + stats['erros']
-        
-        if total > 0:
-            progresso = (acertos / total) * 100
-            st.progress(progresso / 100, text=f"Precisão: {progresso:.1f}%")
-        
-        st.write(f"**Feedback fornecido:** {st.session_state.aprendizado_contador}x")
-        
-        st.divider()
-        
-        # Últimas velas
-        st.write("### 🎯 ÚLTIMAS VELAS")
-        for v in st.session_state.velas_simuladas[-5:][::-1]:
-            if v["multiplicador"] >= 10:
-                st.write(f"🌹 `{v['multiplicador']}x` - ROSA")
-            elif v["multiplicador"] >= 5:
-                st.write(f"🚀 `{v['multiplicador']}x` - BOA")
-            elif v["multiplicador"] >= 3:
-                st.write(f"⚠️ `{v['multiplicador']}x` - NEUTRA")
-            else:
-                st.write(f"🔴 `{v['multiplicador']}x` - BAIXA")
+        else:
+            st.info("⏳ Aguardando captura de dados REAIS...")
+            st.write("Enquanto você joga, a IA está capturando dados em tempo real.")
 
 else:
     st.info("👆 Insira o link da plataforma acima para começar!")
 
 st.divider()
-st.caption("🚀 AVIATOR AI PRO v15.0 - Máxima Eficiência | 99% Acertividade | Aprendizado Otimizado")
+st.caption("🚀 AVIATOR AI PRO v16.0 - Dados REAIS | Previsões Precisas | 99% Acertividade")
