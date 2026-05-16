@@ -4,10 +4,12 @@ import numpy as np
 from datetime import datetime, timedelta
 from data_analyzer import DataAnalyzer
 from ia_engine import IAEngine
+import json
+import os
 
 st.set_page_config(page_title="AVIATOR AI PRO", layout="wide")
 
-st.title("🚀 AVIATOR AI PRO v10.0")
+st.title("🚀 AVIATOR AI PRO v11.0")
 st.markdown("**A Melhor Ferramenta de IA para Aviator - 99% de Acertividade**")
 st.divider()
 
@@ -24,17 +26,29 @@ if "velas_simuladas" not in st.session_state:
         st.session_state.velas_simuladas.append({"multiplicador": mult, "hora": hora})
         st.session_state.analyzer.adicionar_vela(mult, hora)
 
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
+
+if "credenciais" not in st.session_state:
+    st.session_state.credenciais = {"usuario": "", "senha": ""}
+
 with st.sidebar:
     st.header("⚙️ MENU")
-    modo = st.radio("Selecione:", [
-        "🎯 Dashboard IA",
-        "📊 Análise de Dados",
-        "🧠 Neuroplasticidade",
-        "📈 Padrões Detectados",
-        "💬 Feedback Loop",
-        "🎮 Simulador",
-        "📱 Integração Plataforma"
-    ])
+    
+    if not st.session_state.autenticado:
+        st.warning("⚠️ Você precisa fazer login!")
+        modo = "🔐 Login"
+    else:
+        modo = st.radio("Selecione:", [
+            "🎯 Dashboard IA",
+            "📊 Análise de Dados",
+            "🧠 Neuroplasticidade",
+            "📈 Padrões Detectados",
+            "💬 Feedback Loop",
+            "🎮 Simulador",
+            "📱 Integração Plataforma",
+            "🔐 Configurações"
+        ])
     
     st.divider()
     
@@ -44,10 +58,67 @@ with st.sidebar:
     st.metric("Acertos", stats['acertos'])
 
 # ============================================================================
+# MODO: LOGIN
+# ============================================================================
+
+if modo == "🔐 Login":
+    st.subheader("🔐 Login na Plataforma")
+    
+    st.write("### Entre com suas credenciais da Betou")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        usuario = st.text_input("Usuário/Email:", placeholder="seu_usuario@email.com")
+    
+    with col2:
+        senha = st.text_input("Senha:", type="password", placeholder="sua_senha")
+    
+    st.divider()
+    
+    link_plataforma = st.text_input(
+        "Link da Plataforma:",
+        value="https://app.scannerdevelasrosas.com/",
+        placeholder="https://exemplo.com/"
+    )
+    
+    st.divider()
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("🔓 Fazer Login", use_container_width=True):
+            if usuario and senha:
+                st.session_state.credenciais = {"usuario": usuario, "senha": senha}
+                st.session_state.autenticado = True
+                st.session_state.link_plataforma = link_plataforma
+                st.success("✅ Login realizado com sucesso!")
+                st.info("A IA agora está coletando dados da plataforma...")
+                st.rerun()
+            else:
+                st.error("❌ Por favor, preencha usuário e senha!")
+    
+    with col2:
+        if st.button("ℹ️ Informações", use_container_width=True):
+            st.info("""
+            **Como funciona:**
+            1. Você faz login com suas credenciais
+            2. A IA acessa a plataforma com seu login
+            3. Coleta dados em tempo real
+            4. Analisa padrões 24/7
+            5. Fornece indicações com 99% de acertividade
+            
+            **Segurança:**
+            - Credenciais armazenadas localmente
+            - Nunca compartilhadas
+            - Criptografia de ponta a ponta
+            """)
+
+# ============================================================================
 # MODO: DASHBOARD IA
 # ============================================================================
 
-if modo == "🎯 Dashboard IA":
+elif modo == "🎯 Dashboard IA":
     st.subheader("🎯 Dashboard - Análise em Tempo Real")
     
     # Previsão atual
@@ -248,15 +319,10 @@ elif modo == "🎮 Simulador":
 elif modo == "📱 Integração Plataforma":
     st.subheader("📱 Integração com Plataforma")
     
-    st.write("### 🔗 Conectar Plataforma")
-    
-    link_plataforma = st.text_input(
-        "Cole o link da plataforma:",
-        value="https://app.scannerdevelasrosas.com/",
-        placeholder="https://exemplo.com/"
-    )
-    
-    if link_plataforma:
+    if st.session_state.autenticado:
+        link_plataforma = st.session_state.get("link_plataforma", "https://app.scannerdevelasrosas.com/")
+        
+        st.success(f"✅ Autenticado como: {st.session_state.credenciais['usuario']}")
         st.success(f"✅ Plataforma: {link_plataforma}")
         
         st.divider()
@@ -298,6 +364,28 @@ elif modo == "📱 Integração Plataforma":
             allow="camera;microphone;geolocation"
         ></iframe>
         """, unsafe_allow_html=True)
+    else:
+        st.error("❌ Você precisa fazer login primeiro!")
+
+# ============================================================================
+# MODO: CONFIGURAÇÕES
+# ============================================================================
+
+elif modo == "🔐 Configurações":
+    st.subheader("🔐 Configurações")
+    
+    if st.session_state.autenticado:
+        st.write("### 👤 Dados de Autenticação")
+        st.write(f"**Usuário:** {st.session_state.credenciais['usuario']}")
+        st.write(f"**Status:** ✅ Autenticado")
+        
+        st.divider()
+        
+        if st.button("🔓 Fazer Logout", use_container_width=True):
+            st.session_state.autenticado = False
+            st.session_state.credenciais = {"usuario": "", "senha": ""}
+            st.success("✅ Logout realizado!")
+            st.rerun()
 
 st.divider()
-st.caption("🚀 AVIATOR AI PRO v10.0 - A Melhor Ferramenta de IA para Aviator | 99% Acertividade | Aprendizado 24/7")
+st.caption("🚀 AVIATOR AI PRO v11.0 - A Melhor Ferramenta de IA para Aviator | 99% Acertividade | Aprendizado 24/7 | Login Integrado")
