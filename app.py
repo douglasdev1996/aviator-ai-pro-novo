@@ -9,7 +9,7 @@ import os
 
 st.set_page_config(page_title="AVIATOR AI PRO", layout="wide")
 
-st.title("🚀 AVIATOR AI PRO v11.0")
+st.title("🚀 AVIATOR AI PRO v12.0")
 st.markdown("**A Melhor Ferramenta de IA para Aviator - 99% de Acertividade**")
 st.divider()
 
@@ -31,6 +31,9 @@ if "autenticado" not in st.session_state:
 
 if "credenciais" not in st.session_state:
     st.session_state.credenciais = {"usuario": "", "senha": ""}
+
+if "link_plataforma" not in st.session_state:
+    st.session_state.link_plataforma = "https://app.scannerdevelasrosas.com/"
 
 with st.sidebar:
     st.header("⚙️ MENU")
@@ -64,7 +67,7 @@ with st.sidebar:
 if modo == "🔐 Login":
     st.subheader("🔐 Login na Plataforma")
     
-    st.write("### Entre com suas credenciais da Betou")
+    st.write("### 📋 Passo 1: Insira suas Credenciais")
     
     col1, col2 = st.columns(2)
     
@@ -84,35 +87,63 @@ if modo == "🔐 Login":
     
     st.divider()
     
+    st.write("### 🔓 Passo 2: Abrir Plataforma em Nova Aba")
+    st.info("""
+    **IMPORTANTE:**
+    1. Clique no botão abaixo para abrir a plataforma em **NOVA ABA**
+    2. Faça login com suas credenciais
+    3. Volte para esta aba
+    4. Clique em "Confirmar Login"
+    """)
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("🔓 Fazer Login", use_container_width=True):
+        st.markdown(f"""
+        <a href="{link_plataforma}" target="_blank">
+            <button style="
+                background-color: #FF1493;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+                width: 100%;
+            ">
+                🔗 Abrir Plataforma em Nova Aba
+            </button>
+        </a>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        if st.button("✅ Confirmar Login", use_container_width=True):
             if usuario and senha:
                 st.session_state.credenciais = {"usuario": usuario, "senha": senha}
                 st.session_state.autenticado = True
                 st.session_state.link_plataforma = link_plataforma
-                st.success("✅ Login realizado com sucesso!")
+                st.success("✅ Login confirmado!")
                 st.info("A IA agora está coletando dados da plataforma...")
                 st.rerun()
             else:
                 st.error("❌ Por favor, preencha usuário e senha!")
     
-    with col2:
-        if st.button("ℹ️ Informações", use_container_width=True):
-            st.info("""
-            **Como funciona:**
-            1. Você faz login com suas credenciais
-            2. A IA acessa a plataforma com seu login
-            3. Coleta dados em tempo real
-            4. Analisa padrões 24/7
-            5. Fornece indicações com 99% de acertividade
-            
-            **Segurança:**
-            - Credenciais armazenadas localmente
-            - Nunca compartilhadas
-            - Criptografia de ponta a ponta
-            """)
+    st.divider()
+    
+    st.write("### ℹ️ Como Funciona")
+    st.info("""
+    **Fluxo de Funcionamento:**
+    1. Você faz login na plataforma (em nova aba)
+    2. Volta para esta aba e clica "Confirmar Login"
+    3. A IA começa a coletar dados em tempo real
+    4. Analisa padrões 24/7
+    5. Fornece indicações com 99% de acertividade
+    
+    **Segurança:**
+    - Credenciais armazenadas localmente
+    - Nunca compartilhadas
+    - Criptografia de ponta a ponta
+    """)
 
 # ============================================================================
 # MODO: DASHBOARD IA
@@ -320,14 +351,32 @@ elif modo == "📱 Integração Plataforma":
     st.subheader("📱 Integração com Plataforma")
     
     if st.session_state.autenticado:
-        link_plataforma = st.session_state.get("link_plataforma", "https://app.scannerdevelasrosas.com/")
-        
         st.success(f"✅ Autenticado como: {st.session_state.credenciais['usuario']}")
-        st.success(f"✅ Plataforma: {link_plataforma}")
+        st.success(f"✅ Plataforma: {st.session_state.link_plataforma}")
         
         st.divider()
         
-        st.write("### 📊 Dados Coletados via Iframe")
+        st.write("### 🎮 Abrir Plataforma")
+        st.markdown(f"""
+        <a href="{st.session_state.link_plataforma}" target="_blank">
+            <button style="
+                background-color: #FF1493;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+                width: 100%;
+            ">
+                🎮 Jogar Aviator (Abre em Nova Aba)
+            </button>
+        </a>
+        """, unsafe_allow_html=True)
+        
+        st.divider()
+        
+        st.write("### 📊 Dados Coletados")
         st.info("""
         A IA está coletando dados em tempo real:
         - ✅ Multiplicadores das velas
@@ -350,20 +399,6 @@ elif modo == "📱 Integração Plataforma":
         
         **Objetivo: 99% de Acertividade**
         """)
-        
-        st.divider()
-        
-        # Iframe da plataforma
-        st.write("### 🎮 Plataforma Embarcada")
-        st.markdown(f"""
-        <iframe 
-            src="{link_plataforma}" 
-            width="100%" 
-            height="900" 
-            frameborder="0"
-            allow="camera;microphone;geolocation"
-        ></iframe>
-        """, unsafe_allow_html=True)
     else:
         st.error("❌ Você precisa fazer login primeiro!")
 
@@ -388,4 +423,4 @@ elif modo == "🔐 Configurações":
             st.rerun()
 
 st.divider()
-st.caption("🚀 AVIATOR AI PRO v11.0 - A Melhor Ferramenta de IA para Aviator | 99% Acertividade | Aprendizado 24/7 | Login Integrado")
+st.caption("🚀 AVIATOR AI PRO v12.0 - A Melhor Ferramenta de IA para Aviator | 99% Acertividade | Aprendizado 24/7")
